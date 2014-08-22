@@ -1,0 +1,35 @@
+{
+  "undef": true,
+  "unused": true,
+
+  "asi": true,
+
+  "maxlen": 80,
+  "maxcomplexity": 7,
+  "quotmark": "single",
+  "freeze": true,
+
+  "browser": true,
+
+  "globals": {
+    "confirm": true,
+    "angular": true,
+
+    "mult": true,
+    "mag": true,
+    "normalize": true,
+    "diff": true,
+    "add": true,
+    "sub": true,
+    "dist": true,
+    "sq": true,
+
+    "_": false,
+    "$": false,
+    "skanaar": true,
+    "Nodes": true,
+    "Engine": true,
+    "Visualizer": false,
+    "ClusterPlatform": true
+  }
+}
