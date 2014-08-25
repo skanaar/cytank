@@ -64,8 +64,23 @@
 		Bacon.fromEventTarget(document.body, 'mousemove')
 			 .onValue(function(e) { input.mouse = V.Vec(e.offsetX, e.offsetY) })
 
+
+
 		function update(){
 			requestAnimationFrame(function(){
+
+				var pad = navigator.getGamepads()[0]
+				if (pad){
+					input.up = pad.buttons[0].pressed
+					input.left = pad.axes[0] < -0.3
+					input.right = pad.axes[0] > 0.3
+					var aim = V.Vec(pad.axes[2]*300, pad.axes[3]*300)
+					var target = V.add(world.units[0].pos, aim)
+					input.mouse = V.add(V.mult(input.mouse, 0.95), V.mult(target, 0.05))
+					if (pad.buttons[7].pressed)
+						world.fire(input.mouse)
+				}
+
 				simulate(world, 0.025)
 				conduct(world, input, 0.025)
 				render(world, input, g)
