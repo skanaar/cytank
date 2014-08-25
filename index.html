@@ -12,16 +12,63 @@
 	<canvas id="canvas" width="600" height="400"></canvas>
 
 	<script src="js/underscore.js"></script>
+	<script src="js/Bacon.js"></script>
 	<script src="js/skanaar.canvas.js"></script>
+	<script src="js/skanaar.vector.js"></script>
 	<script src="js/game.js"></script>
+	<script src="js/render.js"></script>
+	<script src="js/conduct.js"></script>
+	<script src="js/simulate.js"></script>
 	<script>
 		var canvas = document.getElementById('canvas')
 		var g = new skanaar.Canvas(canvas, {})
 		var world = new World()
+
+		var keyMap = {
+			87: 'up',
+			65: 'left',
+			83: 'down',
+			68: 'right',
+			// numpad arrows
+			38: 'up',
+			37: 'left',
+			12: 'down',
+			40: 'down',
+			39: 'right',
+			// numpad numbers
+			104: 'up',
+			100: 'left',
+			101: 'down',
+			102: 'right'
+		}
+
+		var input = {
+			up: false,
+			left: false,
+			down: false,
+			right: false,
+			mouse: V.Vec()
+		}
+
+		Bacon.fromEventTarget(document.body, 'keydown')
+			 .filter(function(e){ return e.keyCode in keyMap })
+			 .onValue(function(e) { return input[keyMap[e.keyCode]] = true })
+
+		Bacon.fromEventTarget(document.body, 'keyup')
+			 .filter(function(e){ return e.keyCode in keyMap })
+			 .onValue(function(e) { return input[keyMap[e.keyCode]] = false })
+
+		Bacon.fromEventTarget(document.body, 'click')
+			 .onValue(function(e) { world.fire(V.Vec(e.offsetX, e.offsetY)) })
+
+		Bacon.fromEventTarget(document.body, 'mousemove')
+			 .onValue(function(e) { input.mouse = V.Vec(e.offsetX, e.offsetY) })
+
 		function update(){
 			requestAnimationFrame(function(){
 				simulate(world, 0.025)
-				render(g, world)
+				conduct(world, input, 0.025)
+				render(world, input, g)
 			})
 		}
 		setInterval(update, 25)

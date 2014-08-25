@@ -12,24 +12,16 @@
   "browser": true,
 
   "globals": {
-    "confirm": true,
-    "angular": true,
-
-    "mult": true,
-    "mag": true,
-    "normalize": true,
-    "diff": true,
-    "add": true,
-    "sub": true,
-    "dist": true,
-    "sq": true,
-
     "_": false,
     "$": false,
+    "Bacon": false,
     "skanaar": true,
-    "Nodes": true,
-    "Engine": true,
-    "Visualizer": false,
-    "ClusterPlatform": true
+    "V": true,
+    "Terrain": true,
+    "Unit": true,
+    "World": true,
+    "render": true,
+    "simulate": true,
+    "input": true
   }
 }
