@@ -58,8 +58,9 @@
 			 .filter(function(e){ return e.keyCode in keyMap })
 			 .onValue(function(e) { return input[keyMap[e.keyCode]] = false })
 
-		Bacon.fromEventTarget(document.body, 'click')
-			 .onValue(function(e) { world.fire(V.Vec(e.offsetX, e.offsetY)) })
+		Bacon.fromEventTarget(document.body, 'click').onValue(function(e) {
+		 	world.fire(V.Vec(e.offsetX, e.offsetY))
+		})
 
 		Bacon.fromEventTarget(document.body, 'mousemove')
 			 .onValue(function(e) { input.mouse = V.Vec(e.offsetX, e.offsetY) })

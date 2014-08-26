@@ -58,6 +58,18 @@ skanaar.Canvas = function (canvas, callbacks){
 		width: function (){ return canvas.width },
 		height: function (){ return canvas.height },
 		ctx: ctx,
+		inTransform: function (t, func){
+			if (!func){
+				func = t
+				t = {}
+			}
+			ctx.save()
+			if (t.translate) ctx.translate(t.translate.x, t.translate.y)
+			if (t.rotate) ctx.rotate(t.rotate)
+			if (t.scale) ctx.scale(t.scale)
+			func()
+			ctx.restore()
+		},
 		background: function (r, g, b){
 			ctx.fillStyle = color255(r, g, b)
 			ctx.fillRect (0, 0, canvas.width, canvas.height)

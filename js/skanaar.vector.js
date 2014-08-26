@@ -1,6 +1,11 @@
 var skanaar = skanaar || {}
 skanaar.V = {
-	Vec: function (x, y){ return { x: x || 0, y: y || 0 } },
+	Vec: function(x, y){ return { x: x || 0, y: y || 0 } },
+	random: function(len){
+		var a = Math.random()*2*Math.PI
+		len = len || 1
+		return { x: len*Math.cos(a), y: len*Math.sin(a) }
+	},
 	sq: function(x){ return x*x },
 	dist: function(a,b){ return skanaar.V.mag(skanaar.V.diff(a,b)) },
 	add: function(a,b){ return { x: a.x + b.x, y: a.y + b.y } },
