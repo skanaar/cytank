@@ -114,22 +114,8 @@ function World(){
 				{x:145,y:219},{x:170,y:146},{x:144,y:112},{x:124,y:70},
 				{x:223,y:54},{x:336,y:89},{x:338,y:119},{x:258,y:176},
 				{x:244,y:256},{x:227,y:280},{x:251,y:316},{x:457,y:349},
-				{x:550,y:300},{x:600,y:0},{x:600,y:400}])
+				{x:550,y:300},{x:690,y:300},{x:700,y:295},{x:800,y:0},{x:800,y:400}])
 		],
-		units: units,
-		fire: function (click){
-			var player = units[0]
-			var vel = V.mult(V.diff(click, player.pos), 2)
-			var barrelLength = player.radius*1.1
-			var pos = V.add(player.pos, V.mult(V.normalize(vel), barrelLength))
-			units.push(Unit(pos, {
-				style: 'bullet',
-				vel: vel,
-				radius: 4,
-				airFriction: 1,
-				maxHealth: 1,
-				health: 1
-			}))
-		}
+		units: units
 	}
 }

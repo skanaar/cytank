@@ -65,7 +65,7 @@ function render(world, input, g){
 
 		g.path(_.times(100, function (i){
 			var barrelLength = player.radius
-			var vel = V.mult(V.diff(input.mouse, player.pos), 2)
+			var vel = V.mult(input.aim, 2)
 			var pos = V.add(player.pos, V.mult(V.normalize(vel), barrelLength))
 			var t = i/50
 			return V.add(pos, V.Vec(

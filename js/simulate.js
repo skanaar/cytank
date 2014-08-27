@@ -112,7 +112,8 @@ function simulate(world, deltaT){
 		for(var i = 0; i<world.units.length; i++)
 			if (world.units[i].health <= 0){
 				var e = world.units.splice(i, 1)[0]
-				dealDamage(e.pos, e.damageRadius, e.damageOnDeath)
+				if (e.damageOnDeath)
+					dealDamage(e.pos, e.damageRadius, e.damageOnDeath)
 			}
 	}
 	
@@ -124,6 +125,6 @@ function simulate(world, deltaT){
 		for(var i = 0; i<world.units.length; i++)
 			if (world.units[i].health <= 0)
 				world.units.splice(i, 1)
-		world.particles.add(pos, radius/8, radius)
+		world.particles.add(pos, radius/8, damage)
 	}
 }

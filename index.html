@@ -7,9 +7,19 @@
 <meta name="description" content="Scorch the earth. And your enemies.">
 <title>cytank</title>
 <link rel="shortcut icon" href="favicon.png">
+<style>
+	body {
+		margin: 0;
+		background: black;
+	}
+	#canvas {
+		width: 100%;
+		height: auto;
+	}
+</style>
 </head>
 <body>
-	<canvas id="canvas" width="600" height="400"></canvas>
+	<canvas id="canvas" width="800" height="400"></canvas>
 
 	<script src="js/underscore.js"></script>
 	<script src="js/Bacon.js"></script>
@@ -47,7 +57,9 @@
 			left: false,
 			down: false,
 			right: false,
-			mouse: V.Vec()
+			fire: false,
+			mouse: V.Vec(),
+			aim: V.Vec()
 		}
 
 		Bacon.fromEventTarget(document.body, 'keydown')
@@ -59,30 +71,41 @@
 			 .onValue(function(e) { return input[keyMap[e.keyCode]] = false })
 
 		Bacon.fromEventTarget(document.body, 'click').onValue(function(e) {
-		 	world.fire(V.Vec(e.offsetX, e.offsetY))
+		 	input.fire = true
 		})
 
 		Bacon.fromEventTarget(document.body, 'mousemove')
-			 .onValue(function(e) { input.mouse = V.Vec(e.offsetX, e.offsetY) })
+			 .onValue(function(e) {
+			 	var scale = canvas.width / canvas.offsetWidth 
+			 	var cursor = V.Vec(e.offsetX * scale, e.offsetY * scale)
+			 	input.mouse = cursor
+			 	var pointing = V.diff(cursor, world.units[0].pos)
+			 	var d = V.mag(pointing)
+			 	if (d > 300)
+			 		pointing = V.mult(pointing, 300/d)
+			 	input.aim = pointing
+			 })
 
 		function update(){
 			requestAnimationFrame(function(){
 
 				var pad = navigator.getGamepads()[0]
 				if (pad){
+					input.fire = pad.buttons[7].pressed
 					input.up = pad.buttons[0].pressed
 					input.left = pad.axes[0] < -0.3
 					input.right = pad.axes[0] > 0.3
 					var aim = V.Vec(pad.axes[2]*300, pad.axes[3]*300)
+					input.aim = V.add(V.mult(input.aim, 0.95), V.mult(aim, 0.05))
 					var target = V.add(world.units[0].pos, aim)
 					input.mouse = V.add(V.mult(input.mouse, 0.95), V.mult(target, 0.05))
-					if (pad.buttons[7].pressed)
-						world.fire(input.mouse)
 				}
 
 				simulate(world, 0.025)
 				conduct(world, input, 0.025)
 				render(world, input, g)
+
+				input.fire = false
 			})
 		}
 		setInterval(update, 25)
