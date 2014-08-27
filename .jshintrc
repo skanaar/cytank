@@ -19,6 +19,7 @@
     "V": true,
     "Terrain": true,
     "Unit": true,
+    "Explosion": true,
     "World": true,
     "render": true,
     "simulate": true,

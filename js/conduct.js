@@ -25,6 +25,8 @@ function conduct(world, keys, deltaT){
 			var dir = V.normalize(V.diff(a, b))
 			var power = keys.left ? 200 : -200
 			var thrust = V.mult(dir, power * deltaT)
+			if (V.mag(player.vel) > 20)
+				world.particles.add(player.pos, 0, 1)
 			player.vel = V.add(player.vel, thrust)
 			if (V.dot(thrust, player.vel) < 0)
 				brake()

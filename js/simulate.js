@@ -7,6 +7,8 @@ function simulate(world, deltaT){
 	groundCollisions()
 	groundedUnits()
 	cullDeadUnits()
+
+	world.particles.update(deltaT)
 	
 	function ageUnits(){
 		world.units.forEach(function (e){
@@ -21,11 +23,17 @@ function simulate(world, deltaT){
 			e.pos = V.add(e.pos, V.mult(e.vel, deltaT))
 			e.vel = V.add(e.vel, V.mult(world.gravity, deltaT))
 			e.vel = V.mult(e.vel, e.airFriction)
+			if (e.style == 'bullet')
+				world.particles.add(e.pos, 0, 1)
 		})
 	}
 
 	function groundCollisions(){
-		_.each(fallingUnits, function(e){
+		var collidingUnits = _.where(world.units, {
+			isGrounded: false,
+			isCollider: true
+		})
+		_.each(collidingUnits, function(e){
 			var pos1 = e.pos
 			var pos2 = V.add(e.pos, V.mult(e.vel, deltaT))
 			_.each(world.terrains, function(terrain, terrainIndex){
@@ -54,11 +62,18 @@ function simulate(world, deltaT){
 	}
 
 	function landUnit(unit, terrainIndex, segmentIndex, normal){
-		var impactDamage = V.dot(unit.vel, normal) - unit.suspension
-		unit.health -= Math.max(0, impactDamage)
+		var impact = V.dot(unit.vel, normal)
+		var impactDamage = Math.max(0, impact - unit.suspension)
+		unit.health -= impactDamage
 		unit.isGrounded = true
 		unit.terrain = terrainIndex
 		unit.segment = segmentIndex
+		if (impactDamage && !unit.style){
+			world.units.push(Explosion(unit.pos, {
+				maxAge: 0.1,
+				radius: impact * 0.2
+			}))
+		}
 	}
 
 	function groundedUnits(){
@@ -82,15 +97,13 @@ function simulate(world, deltaT){
 			e.vel = V.mult(e.vel, e.groundFriction)
 
 			if(V.dot(world.gravity, normal) > 0) e.isGrounded = false
-
 		})
 	}
 	
 	function cullDeadUnits(){
-		_.where(world.units, {style: null}).forEach(function (e){
+		_.where(world.units, {hasVisualDeath: true}).forEach(function (e){
 			if (e.health <= 0){
-				world.units.push(Unit(e.pos, {
-					style: 'explosion',
+				world.units.push(Explosion(e.pos, {
 					maxAge: 0.3,
 					radius: e.damageRadius
 				}))
@@ -111,5 +124,6 @@ function simulate(world, deltaT){
 		for(var i = 0; i<world.units.length; i++)
 			if (world.units[i].health <= 0)
 				world.units.splice(i, 1)
+		world.particles.add(pos, radius/8, radius)
 	}
 }

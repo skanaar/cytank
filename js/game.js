@@ -1,6 +1,6 @@
 var V = skanaar.V
 
-var Terrain = function (points){
+function Terrain(points){
 	var verts = points
 	return {
 		vertices: verts,
@@ -8,7 +8,57 @@ var Terrain = function (points){
 	}
 }
 
-var Unit = function (pos, opt){
+function Particles(w, h, scale){
+	function smoothField(field){
+		for(var i=0; i<field.length-1; i++)
+			for(var j=0; j<field[0].length-1; j++)
+				field[i][j] = V.mult(V.add(
+					V.add(field[i][j], field[i+1][j]),
+					V.add(field[i][j+1], field[i+1][j+1])),
+				0.25)
+	}
+	var field = _(w).times(function (){
+		return _(h).times(function (){ return V.random(10) })
+	})
+	//smoothField(field)
+	var particles = []
+	return {
+		particles: particles,
+		add: function (pos, radius, density){
+			_(density).times(function(){
+				particles.push({
+					pos: V.add(pos, V.random(Math.random()*radius)),
+					value: Math.random()/2 + 0.5
+				})
+			})
+		},
+		update: function (deltaT){
+			_.each(particles, function (e){
+				e.value -= 0.01
+				var cell = V.mult(e.pos, 1/scale)
+				var i = Math.floor(cell.x)
+				var j = Math.floor(cell.y)
+				if (i>=0 && i<field.length-1 && j>=0 && j<field[0].length-1){
+					var wa = (1 - (cell.x - i)) * (1 - (cell.y - j))
+					var wb = (cell.x - i) * (1 - (cell.y - j))
+					var wc = (1 - (cell.x - i)) * (cell.y - j)
+					var wd = (cell.x - i) * (cell.y - j)
+					var a = V.mult(field[i][j], wa)
+					var b = V.mult(field[i+1][j], wb)
+					var c = V.mult(field[i][j+1], wc)
+					var d = V.mult(field[i+1][j+1], wd)
+					var force = V.add(V.add(a, b), V.add(c, d))
+					e.pos = V.add(e.pos, V.mult(force, deltaT))
+				}
+			})
+			for(var k=0; k<particles.length; k++)
+				if (particles[k].value <= 0)
+					particles.splice(k, 1)
+		}
+	}
+}
+
+function Unit(pos, opt){
 	opt = opt || {}
 	return _.extend({
 		style: null,
@@ -16,6 +66,8 @@ var Unit = function (pos, opt){
 		vel: V.Vec(),
 		radius: 10,
 		isGrounded: false,
+		isCollider: true,
+		hasVisualDeath: true,
 		terrain: 0,
 		segment: 0,
 		jumpCharge: 0,
@@ -31,7 +83,17 @@ var Unit = function (pos, opt){
 	}, opt)
 }
 
-var World = function (){
+function Explosion(pos, opt){
+	return Unit(pos, _.extend(opt, {
+		style: 'explosion',
+		airFriction: 0,
+		damageOnDeath: 0,
+		hasVisualDeath: false,
+		isCollider: false
+	}))
+}
+
+function World(){
 	var units = [
 		Unit(V.Vec(250, 20), { groundFriction: 0.99 }),
 		Unit(V.Vec(80, 30), { airFriction: 0.7, radius: 3 }),
@@ -44,6 +106,7 @@ var World = function (){
 	]
 	return {
 		gravity: V.Vec(0, 500),
+		particles: Particles(60, 40, 10),
 		terrains: [
 			Terrain([V.Vec(350, 150), V.Vec(550, 150), V.Vec(450, 200)]),
 			Terrain([
@@ -59,7 +122,14 @@ var World = function (){
 			var vel = V.mult(V.diff(click, player.pos), 2)
 			var barrelLength = player.radius*1.1
 			var pos = V.add(player.pos, V.mult(V.normalize(vel), barrelLength))
-			units.push(Unit(pos, { vel: vel, radius: 2, airFriction: 1, maxHealth: 1, health: 1 }))
+			units.push(Unit(pos, {
+				style: 'bullet',
+				vel: vel,
+				radius: 4,
+				airFriction: 1,
+				maxHealth: 1,
+				health: 1
+			}))
 		}
 	}
 }

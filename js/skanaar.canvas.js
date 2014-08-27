@@ -88,6 +88,7 @@ skanaar.Canvas = function (canvas, callbacks){
 		ellipse: function (center, rx, ry, start, stop){
 			if (start === undefined) start = 0
 			if (stop === undefined) stop = twopi
+			if (ry === undefined) ry = rx
 			ctx.beginPath()
 			ctx.save()
 			ctx.translate(center.x, center.y)
