@@ -26,11 +26,33 @@ function render(world, input, g){
 	}
 
 	function renderTerrain(){
-		g.ctx.strokeStyle = '#000'
+		g.ctx.strokeStyle = '#555'
 		g.ctx.fillStyle = '#aaa'
 		_.each(world.terrains, function(t){
 			g.circuit(t.vertices).fill().stroke()
 		})
+		//renderTerrainTopside()
+	}
+
+	function renderTerrainTopside(){
+		g.ctx.lineWidth = 5
+		g.ctx.strokeStyle = '#480'
+		_.each(world.terrains, function(t){
+			g.ctx.beginPath()
+			var lastWasGround = false
+			for(var i=0; i<t.vertices.length+1; i++){
+				var v = t.vertex(i)
+				var normal = V.rot(V.diff(v, t.vertex(i+1)))
+				var isGround = V.dot(world.gravity, normal) > 0
+				if (lastWasGround)
+					g.ctx.lineTo(v.x, v.y)
+				else
+					g.ctx.moveTo(v.x, v.y)
+				lastWasGround = isGround
+			}
+			g.ctx.stroke()
+		})
+		g.ctx.lineWidth = 1
 	}
 
 	function renderUnits(){
@@ -65,9 +87,9 @@ function render(world, input, g){
 
 		g.path(_.times(100, function (i){
 			var barrelLength = player.radius
-			var vel = V.mult(input.aim, 2)
+			var vel = V.mult(input.aim, 4)
 			var pos = V.add(player.pos, V.mult(V.normalize(vel), barrelLength))
-			var t = i/50
+			var t = i/25
 			return V.add(pos, V.Vec(
 				t*vel.x + 0.49*world.gravity.x*t*t,
 				t*vel.y + 0.49*world.gravity.y*t*t

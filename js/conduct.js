@@ -10,7 +10,7 @@ function conduct(world, input, deltaT){
 		flight()
 
 	function fire(){
-		var vel = V.mult(input.aim, 2)
+		var vel = V.mult(input.aim, 4)
 		var barrelLength = player.radius*1.1
 		var pos = V.add(player.pos, V.mult(V.normalize(vel), barrelLength))
 		world.units.push(Unit(pos, {
