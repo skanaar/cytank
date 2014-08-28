@@ -9,18 +9,7 @@ function Terrain(points){
 }
 
 function Particles(w, h, scale){
-	function smoothField(field){
-		for(var i=0; i<field.length-1; i++)
-			for(var j=0; j<field[0].length-1; j++)
-				field[i][j] = V.mult(V.add(
-					V.add(field[i][j], field[i+1][j]),
-					V.add(field[i][j+1], field[i+1][j+1])),
-				0.25)
-	}
-	var field = _(w).times(function (){
-		return _(h).times(function (){ return V.random(10) })
-	})
-	//smoothField(field)
+	var field = V.VectorField(w, h, { initializer: _.partial(V.random, 10) })
 	var particles = []
 	return {
 		particles: particles,
@@ -36,20 +25,8 @@ function Particles(w, h, scale){
 			_.each(particles, function (e){
 				e.value -= 0.01
 				var cell = V.mult(e.pos, 1/scale)
-				var i = Math.floor(cell.x)
-				var j = Math.floor(cell.y)
-				if (i>=0 && i<field.length-1 && j>=0 && j<field[0].length-1){
-					var wa = (1 - (cell.x - i)) * (1 - (cell.y - j))
-					var wb = (cell.x - i) * (1 - (cell.y - j))
-					var wc = (1 - (cell.x - i)) * (cell.y - j)
-					var wd = (cell.x - i) * (cell.y - j)
-					var a = V.mult(field[i][j], wa)
-					var b = V.mult(field[i+1][j], wb)
-					var c = V.mult(field[i][j+1], wc)
-					var d = V.mult(field[i+1][j+1], wd)
-					var force = V.add(V.add(a, b), V.add(c, d))
-					e.pos = V.add(e.pos, V.mult(force, deltaT))
-				}
+				var force = field.sample(cell)
+				e.pos = V.add(e.pos, V.mult(force, deltaT))
 			})
 			for(var k=0; k<particles.length; k++)
 				if (particles[k].value <= 0)

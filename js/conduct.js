@@ -44,15 +44,14 @@ function conduct(world, input, deltaT){
 	}
 
 	function jumping(segmentDir){
-		if (input.up){
-			player.jumpCharge = Math.min(player.jumpCharge + 1000, 15000)
-		}
-		if (!input.up && player.jumpCharge){
+		if (input.up && player.isGrounded && player.jumpCharge){
 			var normal = V.rot(segmentDir)
 			var jumpForce = V.mult(normal, player.jumpCharge * deltaT * -1)
 			player.jumpCharge = 0
 			player.vel = V.add(player.vel, jumpForce)
 			player.isGrounded = false
+		} else {
+			player.jumpCharge = Math.min(player.jumpCharge + 1000, 10000)
 		}
 	}
 
