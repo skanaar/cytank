@@ -27,6 +27,19 @@ function simulate(world, deltaT){
 				world.particles.add(e.pos, 0, 1)
 		})
 	}
+	function intersection(p1, p2, q1, q2) {
+	    var vp = V.diff(p2, p1)
+	    var vq = V.diff(q2, q1)
+	    var det = vq.y * vp.x - vq.x * vp.y
+	    if (det === 0)
+	        return false
+	    var w = V.diff(p1, q1)
+	    var t = (vq.x * w.y - vq.y * w.x) / det
+	    var u = (vp.x * w.y - vp.y * w.x) / det
+	    if(t < 0 || t > 1 || u < 0 || u > 1)
+	    	return false
+	    return V.add(p1, V.mult(vp, t))
+	}
 
 	function groundCollisions(){
 		var collidingUnits = _.where(world.units, {
@@ -37,23 +50,18 @@ function simulate(world, deltaT){
 			var pos1 = e.pos
 			var pos2 = V.add(e.pos, V.mult(e.vel, deltaT))
 			_.each(world.terrains, function(terrain, terrainIndex){
-				for(var i=0; i<terrain.vertices.length; i++){
-					var a = terrain.vertex(i)
-					var b = terrain.vertex(i+1)
+				for(var segment=0; segment<terrain.vertices.length; segment++){
+					var a = terrain.vertex(segment)
+					var b = terrain.vertex(segment+1)
 					var segmentDir = V.normalize(V.diff(a, b))
 					var normal = V.rot(segmentDir)
-					var proj1 = V.dot(V.diff(pos1, a), normal)
-					var proj2 = V.dot(V.diff(pos2, a), normal)
-					var crossesLine = proj1 < 0 && proj2 > 0
-					var minX = Math.min(a.x, b.x)
-					var maxX = Math.max(a.x, b.x)
-					var midX = (pos1.x + pos2.x) / 2
-					var crossesSegment = minX < midX && maxX > midX
-					var isHit = crossesLine && crossesSegment
+
+					var hit = intersection(pos1, pos2, a, b)
+
 					var isGround = V.dot(world.gravity, normal) > 0
-					if (isHit){
+					if (hit){
 						if (isGround)
-							landUnit(e, terrainIndex, i, normal)
+							landUnit(e, terrainIndex, segment, hit, normal)
 						e.vel = V.mult(segmentDir, V.dot(e.vel, segmentDir))
 					}
 				}
@@ -61,13 +69,14 @@ function simulate(world, deltaT){
 		})
 	}
 
-	function landUnit(unit, terrainIndex, segmentIndex, normal){
+	function landUnit(unit, terrainIndex, segmentIndex, pos, normal){
 		var impact = V.dot(unit.vel, normal)
 		var impactDamage = Math.max(0, impact - unit.suspension)
 		unit.health -= impactDamage
 		unit.isGrounded = true
 		unit.terrain = terrainIndex
 		unit.segment = segmentIndex
+		unit.pos = pos
 		if (impactDamage && !unit.style){
 			world.units.push(Explosion(unit.pos, {
 				maxAge: 0.1,
