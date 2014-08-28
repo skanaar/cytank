@@ -53,12 +53,12 @@ function simulate(world, deltaT){
 				for(var segment=0; segment<terrain.vertices.length; segment++){
 					var a = terrain.vertex(segment)
 					var b = terrain.vertex(segment+1)
-					var segmentDir = V.normalize(V.diff(a, b))
+					var segmentDir = V.normalize(V.diff(b, a))
 					var normal = V.rot(segmentDir)
 
 					var hit = intersection(pos1, pos2, a, b)
 
-					var isGround = V.dot(world.gravity, normal) > 0
+					var isGround = V.dot(world.gravity, normal) < 0
 					if (hit){
 						if (isGround)
 							landUnit(e, terrainIndex, segment, hit, normal)
@@ -70,7 +70,7 @@ function simulate(world, deltaT){
 	}
 
 	function landUnit(unit, terrainIndex, segmentIndex, pos, normal){
-		var impact = V.dot(unit.vel, normal)
+		var impact = -V.dot(unit.vel, normal)
 		var impactDamage = Math.max(0, impact - unit.suspension)
 		unit.health -= impactDamage
 		unit.isGrounded = true
@@ -87,25 +87,33 @@ function simulate(world, deltaT){
 
 	function groundedUnits(){
 		_.each(_.where(world.units, {isGrounded: true}), function(e){
+			var terrain = world.terrains[e.terrain]
 			e.pos = V.add(e.pos, V.mult(e.vel, deltaT))
-			var a = world.terrains[e.terrain].vertex(e.segment)
-			var b = world.terrains[e.terrain].vertex(e.segment + 1)
-			var segmentDir = V.normalize(V.diff(b,a))
-			var normal = V.rot(segmentDir)
-			var projectedPos = V.dot(segmentDir, V.diff(e.pos,a))
-			var projectedHeight = V.dot(normal, V.diff(e.pos,a))
-			if(projectedPos < 0){
-				if(projectedHeight > 0) e.isGrounded = false
-				e.segment--
+			var segment = terrain.segment(e.segment)
+			var projPos = V.dot(segment.dir, V.diff(e.pos, segment.start))
+			var segmentMod = 0
+			if (projPos < 0) segmentMod = -1
+			if (projPos > V.dist(segment.end, segment.start)) segmentMod = 1
+			
+			if (segmentMod !== 0){
+				e.segment += segmentMod
+				var seg2 = terrain.segment(e.segment)
+				var projHeight = V.dot(seg2.normal, V.diff(e.pos, seg2.start))
+				var tooSteep = V.dot(world.gravity, seg2.normal) > 0
+				var flyingOfCliff = projHeight > 0
+				
+				if(flyingOfCliff)
+					e.isGrounded = false
+				else {
+					e.vel = V.mult(seg2.dir, V.dot(seg2.dir, e.vel))
+					e.pos = V.add(e.pos, V.mult(seg2.normal, -projHeight))
+				}
+				if(tooSteep){
+					e.isGrounded = false
+					e.pos = V.add(e.pos, seg2.normal)
+				}
 			}
-			if(projectedPos > V.dist(b,a)){
-				if(projectedHeight > 0) e.isGrounded = false
-				e.segment++
-			}
-
 			e.vel = V.mult(e.vel, e.groundFriction)
-
-			if(V.dot(world.gravity, normal) > 0) e.isGrounded = false
 		})
 	}
 	

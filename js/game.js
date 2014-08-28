@@ -2,9 +2,17 @@ var V = skanaar.V
 
 function Terrain(points){
 	var verts = points
+	function vertex(i){ return verts[(i + verts.length) % verts.length] }
 	return {
 		vertices: verts,
-		vertex: function (i){ return verts[(i + verts.length) % verts.length] }
+		vertex: vertex,
+		segment: function (i){
+			var start = vertex(i)
+			var end = vertex(i+1)
+			var dir = V.normalize(V.diff(end, start))
+			var normal = V.rot(dir)
+			return { start: start, end: end, dir: dir, normal: normal }
+		}
 	}
 }
 
@@ -14,12 +22,13 @@ function Particles(w, h, scale){
 	return {
 		particles: particles,
 		add: function (pos, radius, density){
-			_(density).times(function(){
-				particles.push({
-					pos: V.add(pos, V.random(Math.random()*radius)),
-					value: Math.random()/2 + 0.5
+			if (particles.length < 200)
+				_(density).times(function(){
+					particles.push({
+						pos: V.add(pos, V.random(Math.random()*radius)),
+						value: Math.random()/2 + 0.5
+					})
 				})
-			})
 		},
 		update: function (deltaT){
 			_.each(particles, function (e){
