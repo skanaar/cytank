@@ -87,11 +87,17 @@ function render(world, input, g){
 	}
 
 	function renderBallisticPath(){
-		g.ctx.strokeStyle = '#f88'
+		g.ctx.strokeStyle = '#faa'
+
+		if(!player.weapon || player.weapon.airFriction < 1) return
+
+		var w = player.weapon
 
 		g.path(_.times(100, function (i){
 			var barrelLength = player.radius
-			var vel = V.mult(input.aim, 4)
+			var aimDir = V.normalize(input.aim)
+			var speed = w.baseSpeed + w.variableSpeed * V.mag(input.aim)
+			var vel = V.mult(aimDir, speed)
 			var pos = V.add(player.pos, V.mult(V.normalize(vel), barrelLength))
 			var t = i/25
 			return V.add(pos, V.Vec(
