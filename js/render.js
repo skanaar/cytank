@@ -10,10 +10,7 @@ function render(world, input, g){
 		renderBullets()
 		renderExplosions()
 		renderBallisticPath()
-		_.each(world.particles.particles, function (e){
-			g.ctx.fillStyle = 'rgba(0, 0, 0, ' + e.value*0.1 + ')'
-			g.ellipse(e.pos, 10).fill()
-		})
+		renderParticles()
 	})
 
 	function shakeViewportIfFallingDangerouslyFast(){
@@ -79,6 +76,13 @@ function render(world, input, g){
 			g.ctx.fillStyle = 'rgba(0,0,0,'+(1-aging*aging)+')'
 			var r = e.radius * e.age / e.maxAge
 			g.ellipse(e.pos, r, r).fill()
+		})
+	}
+
+	function renderParticles(){
+		_.each(world.particles.particles, function (e){
+			g.ctx.fillStyle = 'rgba(0, 0, 0, ' + e.value*0.1 + ')'
+			g.ellipse(e.pos, (1-e.value)*20).fill()
 		})
 	}
 

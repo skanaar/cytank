@@ -32,7 +32,7 @@ function conduct(world, input, deltaT){
 		jumping(segmentDir)
 
 		if(input.left || input.right){
-			var power = input.left ? 200 : -200
+			var power = input.left ? 400 : -400
 			var thrust = V.mult(segmentDir, power * deltaT)
 			if (V.mag(player.vel) > 20)
 				world.particles.add(player.pos, 0, 1)

@@ -4,6 +4,7 @@ function simulate(world, deltaT){
 
 	ageUnits()
 	freeFall()
+	unitCollisions()
 	groundCollisions()
 	groundedUnits()
 	cullDeadUnits()
@@ -39,6 +40,34 @@ function simulate(world, deltaT){
 	    if(t < 0 || t > 1 || u < 0 || u > 1)
 	    	return false
 	    return V.add(p1, V.mult(vp, t))
+	}
+
+	function unitCollisions(){
+		var collidingUnits = _.where(world.units, { isCollider: true })
+		_.each(collidingUnits, function(a){
+			_.each(collidingUnits, function(b){
+				if(a === b) return
+				var radiusSum = a.radius + b.radius
+				var vel = V.mult(V.diff(a.vel, b.vel), deltaT)
+				var vDir = V.normalize(vel)
+				var vNormal = V.rot(vDir)
+				var diff = V.diff(a.pos, b.pos)
+				var isCloseToLine = Math.abs(V.dot(vNormal, diff)) < radiusSum
+				var linePos = V.dot(diff, vDir)
+				var isOnSegment = 0 <= linePos && V.mag(vel) >= linePos
+				var isTouching = V.dist(a.pos, b.pos) < radiusSum
+				if (isTouching || (isOnSegment && isCloseToLine)){
+					var impact = V.mag(V.diff(a.vel, b.vel))
+					a.health -= Math.max(0, impact - a.suspension)
+					b.health -= Math.max(0, impact - b.suspension)
+					a.vel = V.add(V.add(a.vel, V.mult(vel, -1)), diff)
+					b.vel = V.add(V.add(b.vel, V.mult(diff, -1)), vel)
+					var midPos = V.mult(V.add(a.pos, b.pos), 0.5)
+					a.pos = V.add(midPos, V.mult(V.normalize(diff), a.radius))
+					b.pos = V.add(midPos, V.mult(V.normalize(diff), -a.radius))
+				}
+			})
+		})
 	}
 
 	function groundCollisions(){
@@ -80,7 +109,7 @@ function simulate(world, deltaT){
 		if (impactDamage && !unit.style){
 			world.units.push(Explosion(unit.pos, {
 				maxAge: 0.1,
-				radius: impact * 0.2
+				radius: impact * 0.1
 			}))
 		}
 	}
@@ -90,7 +119,11 @@ function simulate(world, deltaT){
 			var terrain = world.terrains[e.terrain]
 			e.pos = V.add(e.pos, V.mult(e.vel, deltaT))
 			var segment = terrain.segment(e.segment)
-			var projPos = V.dot(segment.dir, V.diff(e.pos, segment.start))
+			var relPos = V.diff(e.pos, segment.start)
+			var projPos = V.dot(segment.dir, relPos)
+
+			e.pos = V.add(segment.start, V.mult(segment.dir, projPos))
+
 			var segmentMod = 0
 			if (projPos < 0) segmentMod = -1
 			if (projPos > V.dist(segment.end, segment.start)) segmentMod = 1
@@ -142,6 +175,6 @@ function simulate(world, deltaT){
 		for(var i = 0; i<world.units.length; i++)
 			if (world.units[i].health <= 0)
 				world.units.splice(i, 1)
-		world.particles.add(pos, radius/8, damage)
+		world.particles.add(pos, radius/3, damage)
 	}
 }

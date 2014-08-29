@@ -16,19 +16,33 @@ function Terrain(points){
 	}
 }
 
-function Particles(w, h, scale){
-	var field = V.VectorField(w, h, { initializer: _.partial(V.random, 10) })
+function Particles(w, h, scale, maxCount){
+	var field = V.VectorField(w, h, {
+		initializer: function (i,j){
+			return V.add(V.random(10), V.Vec(0, (j/2-h/2)))
+		}
+	})
 	var particles = []
+
+	function dropSurplus(){
+		_(Math.max(0, particles.length - maxCount)).times(function () {
+			var i = Math.floor(Math.random()*particles.length)
+			particles.splice(i, 1)
+		})
+	}
+
 	return {
 		particles: particles,
 		add: function (pos, radius, density){
-			if (particles.length < 200)
-				_(density).times(function(){
-					particles.push({
-						pos: V.add(pos, V.random(Math.random()*radius)),
-						value: Math.random()/2 + 0.5
-					})
+			if (particles.length + density > maxCount)
+				density = Math.round(density/2)
+			_(density).times(function(){
+				particles.push({
+					pos: V.add(pos, V.random(Math.random()*radius)),
+					value: Math.random()/2 + 0.5
 				})
+			})
+			dropSurplus()
 		},
 		update: function (deltaT){
 			_.each(particles, function (e){
@@ -63,7 +77,7 @@ function Unit(pos, opt){
 		groundFriction: 0.97,
 		maxHealth: 1000,
 		health: 1000,
-		damageRadius: 100,
+		damageRadius: 50,
 		damageOnDeath: 200,
 		suspension: 200
 	}, opt)
@@ -84,15 +98,12 @@ function World(){
 		Unit(V.Vec(250, 20), { groundFriction: 0.99 }),
 		Unit(V.Vec(80, 30), { airFriction: 0.7, radius: 3 }),
 		Unit(V.Vec(550, 200), {
-			vel: V.Vec(-80, -80),
-			suspension: 0,
-			health: 20,
-			maxHealth: 20
+			vel: V.Vec(-80, -80)
 		})
 	]
 	return {
 		gravity: V.Vec(0, 500),
-		particles: Particles(60, 40, 10),
+		particles: Particles(80, 40, 10, 400),
 		terrains: [
 			Terrain([V.Vec(350, 150), V.Vec(550, 150), V.Vec(450, 200)]),
 			Terrain([

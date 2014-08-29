@@ -93,7 +93,7 @@ skanaar.Canvas = function (canvas, callbacks){
 			ctx.save()
 			ctx.translate(center.x, center.y)
 			ctx.scale(1, ry/rx)
-			ctx.arc(0, 0, rx/2, start, stop)
+			ctx.arc(0, 0, rx, start, stop)
 			ctx.restore()
 			return chainable
 		},
