@@ -49,7 +49,10 @@
 			104: 'up',
 			100: 'left',
 			101: 'down',
-			102: 'right'
+			102: 'right',
+			49: 'weapon_shell',
+			50: 'weapon_bullet',
+			51: 'weapon_bomb'
 		}
 
 		var input = {
@@ -64,7 +67,7 @@
 
 		Bacon.fromEventTarget(document.body, 'keydown')
 			 .filter(function(e){ return e.keyCode in keyMap })
-			 .onValue(function(e) { return input[keyMap[e.keyCode]] = true })
+			 .onValue(function(e) { return input[keyMap[e.keyCode]] = true; })
 
 		Bacon.fromEventTarget(document.body, 'keyup')
 			 .filter(function(e){ return e.keyCode in keyMap })

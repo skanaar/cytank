@@ -82,7 +82,7 @@ function render(world, input, g){
 	function renderParticles(){
 		_.each(world.particles.particles, function (e){
 			g.ctx.fillStyle = 'rgba(0, 0, 0, ' + e.value*0.1 + ')'
-			g.ellipse(e.pos, (1-e.value)*20).fill()
+			g.ellipse(e.pos, (1-e.value)*10*e.size).fill()
 		})
 	}
 

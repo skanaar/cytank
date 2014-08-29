@@ -33,11 +33,14 @@ function Particles(w, h, scale, maxCount){
 
 	return {
 		particles: particles,
-		add: function (pos, radius, density){
+		add: function (pos, size, radius, density){
+			if (pos.x < 0 || pos.x > w*scale || pos.y < 0 || pos.y > h*scale)
+				return
 			if (particles.length + density > maxCount)
 				density = Math.round(density/2)
 			_(density).times(function(){
 				particles.push({
+					size: size,
 					pos: V.add(pos, V.random(Math.random()*radius)),
 					value: Math.random()/2 + 0.5
 				})

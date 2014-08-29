@@ -21,11 +21,18 @@ function simulate(world, deltaT){
 	
 	function freeFall(){
 		_.each(fallingUnits, function(e){
+
+			if (e.style == 'bullet'){
+				var trailDensity = 3
+				var vel = V.normalize(e.vel)
+				var d = V.mag(e.vel) * deltaT
+				for(var i=0; i<d; i+=trailDensity)
+					world.particles.add(V.add(e.pos, V.mult(vel, i)), 0.5, 0, 1)
+			}
+
 			e.pos = V.add(e.pos, V.mult(e.vel, deltaT))
 			e.vel = V.add(e.vel, V.mult(world.gravity, deltaT))
 			e.vel = V.mult(e.vel, e.airFriction)
-			if (e.style == 'bullet')
-				world.particles.add(e.pos, 0, 1)
 		})
 	}
 	function intersection(p1, p2, q1, q2) {
@@ -87,10 +94,11 @@ function simulate(world, deltaT){
 
 					var hit = intersection(pos1, pos2, a, b)
 
-					var isGround = V.dot(world.gravity, normal) < 0
 					if (hit){
+						collisionDamage(e, normal)
+						var isGround = V.dot(world.gravity, normal) < 0
 						if (isGround)
-							landUnit(e, terrainIndex, segment, hit, normal)
+							landUnit(e, terrainIndex, segment, hit)
 						e.vel = V.mult(segmentDir, V.dot(e.vel, segmentDir))
 					}
 				}
@@ -98,14 +106,17 @@ function simulate(world, deltaT){
 		})
 	}
 
-	function landUnit(unit, terrainIndex, segmentIndex, pos, normal){
-		var impact = -V.dot(unit.vel, normal)
-		var impactDamage = Math.max(0, impact - unit.suspension)
-		unit.health -= impactDamage
+	function landUnit(unit, terrainIndex, segmentIndex, pos){
 		unit.isGrounded = true
 		unit.terrain = terrainIndex
 		unit.segment = segmentIndex
 		unit.pos = pos
+	}
+
+	function collisionDamage(unit, normal){
+		var impact = Math.abs(V.dot(unit.vel, normal))
+		var impactDamage = Math.max(0, impact - unit.suspension)
+		unit.health -= impactDamage
 		if (impactDamage && !unit.style){
 			world.units.push(Explosion(unit.pos, {
 				maxAge: 0.1,
@@ -175,6 +186,6 @@ function simulate(world, deltaT){
 		for(var i = 0; i<world.units.length; i++)
 			if (world.units[i].health <= 0)
 				world.units.splice(i, 1)
-		world.particles.add(pos, radius/3, damage)
+		world.particles.add(pos, 2, radius/3, damage/2)
 	}
 }
