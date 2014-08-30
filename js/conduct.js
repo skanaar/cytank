@@ -1,52 +1,13 @@
 function conduct(world, input, deltaT){
 	var player = world.units[0]
 
-	var weapons = {
-		shell: {
-			baseSpeed: 0,
-			variableSpeed: 4,
-			style: 'bullet',
-			radius: 3,
-			airFriction: 1,
-			maxHealth: 1,
-			health: 1,
-			damageRadius: 50,
-			damageOnDeath: 200,
-			suspension: 200
-		},
-		bullet: {
-			baseSpeed: 2000,
-			variableSpeed: 0,
-			style: 'bullet',
-			radius: 1,
-			airFriction: 1,
-			maxHealth: 1,
-			health: 1,
-			damageRadius: 50,
-			damageOnDeath: 200,
-			suspension: 0
-		},
-		bomb: {
-			baseSpeed: 200,
-			variableSpeed: 8,
-			style: 'bullet',
-			radius: 5,
-			airFriction: 0.92,
-			maxHealth: 1,
-			health: 1,
-			damageRadius: 150,
-			damageOnDeath: 1000,
-			suspension: 100
-		}
-	}
-
-	player.weapon = player.weapon || weapons.shell
+	player.weapon = player.weapon || world.weapons.shell
 	if (input.weapon_shell)
-		player.weapon = weapons.shell
+		player.weapon = world.weapons.shell
 	if (input.weapon_bullet)
-		player.weapon = weapons.bullet
+		player.weapon = world.weapons.bullet
 	if (input.weapon_bomb)
-		player.weapon = weapons.bomb
+		player.weapon = world.weapons.bomb
 	var weapon = player.weapon
 
 	if (input.fire)
@@ -98,12 +59,11 @@ function conduct(world, input, deltaT){
 		if (input.up && player.isGrounded && player.jumpCharge){
 			var normal = V.rot(segmentDir)
 			var jumpForce = V.mult(normal, player.jumpCharge * deltaT * -1)
-			player.jumpCharge = 0
 			player.vel = V.add(player.vel, jumpForce)
+			player.jumpCharge = 0
 			player.isGrounded = false
-		} else {
+		} else
 			player.jumpCharge = Math.min(player.jumpCharge + 1000, 10000)
-		}
 	}
 
 	function brake(){

@@ -72,6 +72,44 @@ function World(){
 				{x:550,y:300},{x:690,y:300},{x:700,y:295},{x:800,y:0},
 				{x:800,y:400}])
 		],
-		units: units
+		units: units,
+		weapons: {
+			shell: {
+				baseSpeed: 0,
+				variableSpeed: 4,
+				style: 'bullet',
+				radius: 3,
+				airFriction: 1,
+				maxHealth: 1,
+				health: 1,
+				damageRadius: 50,
+				damageOnDeath: 200,
+				suspension: 200
+			},
+			bullet: {
+				baseSpeed: 2000,
+				variableSpeed: 0,
+				style: 'bullet',
+				radius: 1,
+				airFriction: 1,
+				maxHealth: 1,
+				health: 1,
+				damageRadius: 50,
+				damageOnDeath: 200,
+				suspension: 0
+			},
+			bomb: {
+				baseSpeed: 200,
+				variableSpeed: 8,
+				style: 'bullet',
+				radius: 5,
+				airFriction: 0.92,
+				maxHealth: 1,
+				health: 1,
+				damageRadius: 150,
+				damageOnDeath: 1000,
+				suspension: 100
+			}
+		}
 	}
 }
