@@ -35,19 +35,6 @@ function simulate(world, deltaT){
 			e.vel = V.mult(e.vel, e.airFriction)
 		})
 	}
-	function intersection(p1, p2, q1, q2) {
-	    var vp = V.diff(p2, p1)
-	    var vq = V.diff(q2, q1)
-	    var det = vq.y * vp.x - vq.x * vp.y
-	    if (det === 0)
-	        return false
-	    var w = V.diff(p1, q1)
-	    var t = (vq.x * w.y - vq.y * w.x) / det
-	    var u = (vp.x * w.y - vp.y * w.x) / det
-	    if(t < 0 || t > 1 || u < 0 || u > 1)
-	    	return false
-	    return V.add(p1, V.mult(vp, t))
-	}
 
 	function unitCollisions(){
 		var collidingUnits = _.where(world.units, { isCollider: true })
@@ -87,19 +74,14 @@ function simulate(world, deltaT){
 			var pos2 = V.add(e.pos, V.mult(e.vel, deltaT))
 			_.each(world.terrains, function(terrain, terrainIndex){
 				for(var segment=0; segment<terrain.vertices.length; segment++){
-					var a = terrain.vertex(segment)
-					var b = terrain.vertex(segment+1)
-					var segmentDir = V.normalize(V.diff(b, a))
-					var normal = V.rot(segmentDir)
-
-					var hit = intersection(pos1, pos2, a, b)
-
+					var seg = terrain.segment(segment)
+					var hit = V.intersection(pos1, pos2, seg.start, seg.end)
 					if (hit){
-						collisionDamage(e, normal)
-						var isGround = V.dot(world.gravity, normal) < 0
+						collisionDamage(e, seg.normal)
+						var isGround = V.dot(world.gravity, seg.normal) < 0
 						if (isGround)
 							landUnit(e, terrainIndex, segment, hit)
-						e.vel = V.mult(segmentDir, V.dot(e.vel, segmentDir))
+						e.vel = V.mult(seg.dir, V.dot(e.vel, seg.dir))
 					}
 				}
 			})
@@ -162,30 +144,24 @@ function simulate(world, deltaT){
 	}
 	
 	function cullDeadUnits(){
-		_.where(world.units, {hasVisualDeath: true}).forEach(function (e){
-			if (e.health <= 0){
+		function isDead(e){ return e.health <= 0 }
+		_.each(_.filter(world.units, isDead), function (e){
+			if (e.hasVisualDeath)
 				world.units.push(Explosion(e.pos, {
 					maxAge: 0.3,
 					radius: e.damageRadius
 				}))
-			}
+			if (e.damageOnDeath)
+				dealDamage(e.pos, e.damageRadius, e.damageOnDeath)
 		})
-		for(var i = 0; i<world.units.length; i++)
-			if (world.units[i].health <= 0){
-				var e = world.units.splice(i, 1)[0]
-				if (e.damageOnDeath)
-					dealDamage(e.pos, e.damageRadius, e.damageOnDeath)
-			}
+		_.prune(world.units, isDead)
 	}
 	
 	function dealDamage(pos, radius, damage){
-		world.units.forEach(function (e){
+		_.each(world.units, function (e){
 			var d = 1 - V.dist(e.pos, pos) / radius
 			if (d > 0) e.health -= d*d * damage
 		})
-		for(var i = 0; i<world.units.length; i++)
-			if (world.units[i].health <= 0)
-				world.units.splice(i, 1)
 		world.particles.add(pos, 2, radius/3, damage/2)
 	}
 }

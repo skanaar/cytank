@@ -16,51 +16,6 @@ function Terrain(points){
 	}
 }
 
-function Particles(w, h, scale, maxCount){
-	var field = V.VectorField(w, h, {
-		initializer: function (i,j){
-			return V.add(V.random(10), V.Vec(0, (j/2-h/2)))
-		}
-	})
-	var particles = []
-
-	function dropSurplus(){
-		_(Math.max(0, particles.length - maxCount)).times(function () {
-			var i = Math.floor(Math.random()*particles.length)
-			particles.splice(i, 1)
-		})
-	}
-
-	return {
-		particles: particles,
-		add: function (pos, size, radius, density){
-			if (pos.x < 0 || pos.x > w*scale || pos.y < 0 || pos.y > h*scale)
-				return
-			if (particles.length + density > maxCount)
-				density = Math.round(density/2)
-			_(density).times(function(){
-				particles.push({
-					size: size,
-					pos: V.add(pos, V.random(Math.random()*radius)),
-					value: Math.random()/2 + 0.5
-				})
-			})
-			dropSurplus()
-		},
-		update: function (deltaT){
-			_.each(particles, function (e){
-				e.value -= 0.01
-				var cell = V.mult(e.pos, 1/scale)
-				var force = field.sample(cell)
-				e.pos = V.add(e.pos, V.mult(force, deltaT))
-			})
-			for(var k=0; k<particles.length; k++)
-				if (particles[k].value <= 0)
-					particles.splice(k, 1)
-		}
-	}
-}
-
 function Unit(pos, opt){
 	opt = opt || {}
 	return _.extend({
